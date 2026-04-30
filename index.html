@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sim Racing Guide</title>
+    <style>
+
+.navbar {
+    position: fixed; /* Keeps it at the top while cubes fall behind it */
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+    background: rgba(0, 0, 0, 0.9); /* Solid dark background */
+    border-bottom: 1px solid #333;   /* The subtle line at the bottom */
+    z-index: 1000;                  /* Ensures it stays above the falling cubes */
+}
+
+.nav-item {
+    color: white;
+    text-decoration: none;
+    margin: 0 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+    transition: 0.3s;
+    opacity: 0.7;
+}
+
+.nav-item:hover {
+    opacity: 1;
+    color: #00ffff; /* Your theme color */
+    text-shadow: 0 0 10px #00ffff;
+}
+
+/* This makes the current page link glow automatically */
+.nav-item.active {
+    opacity: 1;
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+}
+
+        body { margin: 0; background-color: #000; color: white; font-family: sans-serif; overflow: hidden; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        .content {
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; height: 100vh; text-align: center; pointer-events: none;
+        }
+        h1 { font-size: 4rem; text-transform: uppercase; letter-spacing: 10px; text-shadow: 0 0 20px #0088ff; }
+        footer { position: absolute; bottom: 30px; font-size: 1.2rem; color: #888; }
+        .highlight { color: #0088ff; font-weight: bold; }
+
+        /* MOBILE STYLES (for screens smaller than 768px) */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem; /* Shrinks the title so it doesn't wrap weirdly */
+        letter-spacing: 5px;
+    }
+
+    .navbar {
+        padding: 10px 0;
+    }
+
+    .nav-item {
+        margin: 0 10px;
+        font-size: 0.8rem; /* Smaller menu links for fingers to tap */
+        letter-spacing: 1px;
+    }
+
+    footer {
+        font-size: 0.9rem;
+        bottom: 15px;
+        width: 90%; /* Keeps footer centered and safe from edges */
+    }
+}
+
+
+
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+    <a href="index.html" class="nav-item">Home</a>
+    <a href="magazines.html" class="nav-item">Magazines</a>
+    <a href="source-files.html" class="nav-item">Project Files</a>
+</nav>
+
+    <div id="canvas-container"></div>
+
+    <div class="content">
+        <h1>Sim Racing Guide</h1>
+        <footer>
+            Made by <span class="highlight">Youssef Ahmed Osama</span> / Class 8/A
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        let scene, camera, renderer, cubes = [];
+        const FALL_BOUNDARY_TOP = 12;
+        const FALL_BOUNDARY_BOTTOM = -12;
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 10;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            const geometry = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+
+            for (let i = 0; i < 40; i++) {
+                // Using BasicMaterial so we don't need to worry about light sources
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: 0x0088ff, 
+                    wireframe: true 
+                });
+                
+                const cube = new THREE.Mesh(geometry, material);
+                resetCube(cube);
+                
+                // Randomize starting height so they don't all fall in a line at the start
+                cube.position.y = (Math.random() * 24) - 12; 
+                
+                scene.add(cube);
+                cubes.push(cube);
+            }
+        }
+
+        function resetCube(cube) {
+    cube.position.x = (Math.random() - 0.5) * 25;
+    cube.position.z = (Math.random() - 0.5) * 10;
+    cube.position.y = FALL_BOUNDARY_TOP;
+
+    // SLOWER SPEEDS:
+    // 0.01 is the base slow speed
+    // Math.random() * 0.03 adds a tiny bit of variety
+    cube.userData.fallSpeed = 0.01 + Math.random() * 0.03; 
+    
+    // Slowing down the rotation too so it looks smoother
+    cube.userData.rotX = Math.random() * 0.01;
+    cube.userData.rotY = Math.random() * 0.01;
+}
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            cubes.forEach(cube => {
+                cube.position.y -= cube.userData.fallSpeed;
+                cube.rotation.x += cube.userData.rotX;
+                cube.rotation.y += cube.userData.rotY;
+
+                if (cube.position.y < FALL_BOUNDARY_BOTTOM) {
+                    resetCube(cube);
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        init();
+        animate();
+        
+
+
+        
+    </script>
+</body>
+</html>
